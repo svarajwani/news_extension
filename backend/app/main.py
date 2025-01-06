@@ -9,11 +9,10 @@ print("Python Path:", sys.path)
 app = FastAPI()
 
 
-@app.post("/")
+@app.get("/")
 async def read_root():
-    # articles = NewsHandler().get_articles()a
-    # return articles
-    return 0
+    articles = NewsHandler().get_articles()
+    return articles
 
 
 @app.get("/items/{item_id}")
