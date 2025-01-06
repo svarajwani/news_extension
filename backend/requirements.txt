@@ -1,0 +1,7 @@
+fastapi[standard]
+uvicorn
+httpx
+openai
+groq
+python-dotenv
+newsapi-python
