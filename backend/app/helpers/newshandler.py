@@ -1,5 +1,6 @@
 import requests
 import os
+import json
 from dotenv import load_dotenv
 from newsapi import NewsApiClient
 
@@ -18,3 +19,16 @@ class NewsHandler:
                                           language='en',
                                           country='us')
         return top_headlines
+
+    def clean_articles(self, articles):
+        cleaned = []
+        for article in articles:
+            if all(k in article and article[k] for k in ["title", "description", "url"]):
+                newarticle = {
+                    "title": article["title"],
+                    "description": article["description"],
+                    "url": article["url"]
+                }
+                cleaned.append(newarticle)
+
+        return cleaned

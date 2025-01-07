@@ -1,16 +1,32 @@
 import os
 import json
-from typing import Union
-from fastapi import FastAPI, Request
+
+from fastapi import FastAPI, Response
+from fastapi.middleware.cors import CORSMiddleware
+
 from groq import Groq
 from app.helpers.newshandler import NewsHandler
 
 app = FastAPI()
 
+origins = [
+    "http://127.0.0.1.8000",
+    "http://localhost:8000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/articles")
-async def read_root():
+def read_root():
     articles = NewsHandler().get_articles()
+    articlesList = articles["articles"]
+    cleanedArticles = NewsHandler().clean_articles(articlesList)
     client = Groq(
             api_key=os.getenv("GROQ_API_KEY"),
         )
@@ -19,25 +35,21 @@ async def read_root():
         messages=[
             {
                 "role": "system",
-                "content": "You are a detail-oriented AI assistant. You excel at providing responses strictly in valid JSON if requested. When asked for a JSON response, you must output valid JSON with no additional commentary, whitespace, or other text outside of the JSON structure."
+                "content": "You are a detail-oriented AI assistant."
             },
             {
                 "role": "user",
-                "content" : f"Choose the most significant news headlines in this JSON dataset: {articles} "
+                "content" : f"Choose the most significant news headlines in this JSON dataset: {cleanedArticles} "
                             "and give me a JSON-formatted response list with all the chosen significant articles. "
-                            "Please return the final result as valid JSON in this format: "
+                            "Please return the final result in this format: "
                             '{"significant_news_headlines": ['
                             '{"title": "...", "description": "...", "url": "..."}, ...]}'
             },
         ],
-        model="llama-3.3-70b-versatile",
+        model="gemma2-9b-it",
         response_format={ "type": "json_object" },
         frequency_penalty=-2.0,
-    )
+        )
 
-    return chat_example.choices[0].message.content
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+    res = chat_example.choices[0].message.content
+    return res
